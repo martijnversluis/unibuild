@@ -1,5 +1,8 @@
 {
-  "name": "unibuild",
+  "name": "@martijnversluis/unibuild",
+  "publishConfig": {
+    "access": "public"
+  },
   "version": "0.0.1",
   "description": "The simplest build tool in the universe",
   "source": "src/cli.ts",
