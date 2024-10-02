@@ -1,39 +1,20 @@
-#!/usr/bin/env node
-
-import * as fs from 'fs';
-import process from 'process';
 import { Command } from 'commander';
-import { ModuleImporter } from '@humanwhocodes/module-importer';
 
 import Builder from './builder';
 import Config from './config';
 
-const importer = new ModuleImporter();
-
 class CLI {
-  builder: Builder | null = null;
+  builder: Builder;
 
-  config: Config | null = null;
+  config: Config;
 
-  async run() {
-    this.config = await this.loadConfig();
+  constructor(config: Config) {
+    this.config = config;
     this.builder = new Builder(this.config);
-    this.program.parse();
   }
 
-  async loadConfig(): Promise<Config> {
-    const configFilePath = `${process.cwd()}/unibuild.config.js`;
-    const config = await importer.import(configFilePath) as Config;
-
-    if (!fs.existsSync(configFilePath)) {
-      throw new Error(`Config file not found: ${configFilePath}`);
-    }
-
-    if (!('default' in config)) {
-      throw new Error('Config file must export a default object');
-    }
-
-    return config.default as Config;
+  run() {
+    this.program.parse();
   }
 
   get program(): Command {
@@ -62,6 +43,4 @@ class CLI {
   }
 }
 
-new CLI()
-  .run()
-  .catch((error) => console.error(error));
+export default CLI;
