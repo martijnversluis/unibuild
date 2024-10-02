@@ -124,8 +124,6 @@ __metadata:
     process: "npm:^0.11.10"
     typescript: "npm:>=3.0.0"
     url: "npm:^0.11.0"
-  bin:
-    unibuild: lib/cli.js
   languageName: unknown
   linkType: soft
 
