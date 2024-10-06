@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import * as packageInfo from '../package.json';
 
 import Builder from './builder';
 import Config from './config';
@@ -29,8 +30,8 @@ class CLI {
     program
       .name('builder')
       .option('--release', 'Build for release')
-      .description('The simplest build tool in the universe')
-      .version('0.0.1');
+      .description(packageInfo.description)
+      .version(packageInfo.version);
 
     program
       .command('build', { isDefault: true })
