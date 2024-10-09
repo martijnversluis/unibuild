@@ -46,12 +46,12 @@ class CLI {
     return program;
   }
 
-  build(assetNames: string[])  {
+  build(assetNames: string[], { force, release }: { force?: boolean, release?: boolean }) {
     this.builder.build(
       assetNames,
       {
-        force: this.program.opts().force,
-        release: this.program.opts().release
+        force: force || false,
+        release: release || false,
       },
     );
   }
