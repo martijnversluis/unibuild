@@ -48,8 +48,9 @@ class Asset {
     return this.input.some((input) => input instanceof Asset);
   }
 
-  needsBuilding(options: { release: boolean }) {
-    return (!this.releaseOnly || options.release) && (!this.outfileExists() || this.inputChanged());
+  needsBuilding(options: { force: boolean,  release: boolean }) {
+    return (!this.releaseOnly || options.release) &&
+      (options.force || !this.outfileExists() || this.inputChanged());
   }
 
   exists() {

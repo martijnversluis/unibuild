@@ -9,27 +9,23 @@ class CLI {
 
   config: Config;
 
+  program: Command;
+
   constructor(config: Config) {
     this.config = config;
     this.builder = new Builder(this.config);
+    this.program = this.buildProgram();
   }
 
   run() {
     this.program.parse();
   }
 
-  get program(): Command {
+  buildProgram(): Command {
     const program = new Command();
 
-    const build = () => {
-      this.builder?.build({
-        release: program.opts().release,
-      });
-    };
-
     program
-      .name('builder')
-      .option('--release', 'Build for release')
+      .name(packageInfo.name.split('/').pop() as string)
       .description(packageInfo.description)
       .version(packageInfo.version);
 
@@ -37,10 +33,21 @@ class CLI {
       .command('build', { isDefault: true })
       .description('Build assets')
       .argument('[assets...]', 'asset(s) to build')
-      .option('--release', 'Build for release')
-      .action(build);
+      .option('-f, --force', 'Force re-build')
+      .option('-r, --release', 'Build for release')
+      .action(this.build.bind(this));
 
     return program;
+  }
+
+  build(assetNames: string[])  {
+    this.builder.build(
+      assetNames,
+      {
+        force: this.program.opts().force,
+        release: this.program.opts().release
+      },
+    );
   }
 }
 

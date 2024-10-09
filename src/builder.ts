@@ -33,7 +33,7 @@ class Builder {
 
   status() {
     Object.values(this.assets).forEach((asset) => {
-      const assetColor = this.assetColor(asset, { release: false });
+      const assetColor = this.assetColor(asset, { force: false, release: false });
       console.log(chalk[assetColor].underline.bold(`${asset.path}`));
       console.log('  inputs:');
 
@@ -48,9 +48,31 @@ class Builder {
     });
   }
 
-  build(options: BuildOptions) {
-    Object.values(this.assets).forEach((asset: Asset) => {
+  build(assetNames: string[], options: BuildOptions) {
+    this.selectAssets(assetNames).forEach((asset: Asset) => {
       this.buildAsset(asset, options);
+    });
+  }
+
+  clean(assetNames: string[]) {
+    this.selectAssets(assetNames).forEach((asset: Asset) => {
+      this.cleanAsset(asset);
+    });
+  }
+
+  selectAssets(assetNames: string[]) {
+    if (assetNames.length === 0) {
+      return Object.values(this.assets);
+    }
+
+    return assetNames.map((name) => {
+      const asset = this.assets[name];
+
+      if (!asset) {
+        throw new Error(`No such asset: ${name}`);
+      }
+
+      return asset;
     });
   }
 

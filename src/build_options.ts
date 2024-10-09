@@ -1,4 +1,5 @@
 interface BuildOptions {
+  force: boolean;
   release: boolean;
 }
 

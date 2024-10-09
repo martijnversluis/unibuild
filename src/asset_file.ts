@@ -39,6 +39,10 @@ class AssetFile {
   write(contents: string) {
     fs.writeFileSync(this.path, contents);
   }
+
+  remove() {
+    fs.unlinkSync(this.path);
+  }
 }
 
 export default AssetFile;
