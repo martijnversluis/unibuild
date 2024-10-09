@@ -37,6 +37,12 @@ class CLI {
       .option('-r, --release', 'Build for release')
       .action(this.build.bind(this));
 
+    program
+      .command('clean')
+      .description('Clean assets')
+      .argument('[assets...]', 'asset(s) to clean')
+      .action(this.clean.bind(this));
+
     return program;
   }
 
@@ -48,6 +54,10 @@ class CLI {
         release: this.program.opts().release
       },
     );
+  }
+
+  clean(assetNames: string[]) {
+    this.builder.clean(assetNames);
   }
 }
 

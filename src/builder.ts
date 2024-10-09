@@ -116,6 +116,18 @@ class Builder {
     }
   }
 
+  cleanAsset(asset: Asset) {
+    this.logger.log(`Cleaning ${asset.name}`, ['yellow']);
+
+    if (asset.outfile.exists()) {
+      this.logger.log(`Removing ${asset.outfile.path}`);
+      asset.outfile.remove();
+      this.logger.log(`Done cleaning ${asset.name}`, ['green']);
+    } else {
+      this.logger.log(`File ${asset.outfile.path} not found`, ['yellow']);
+    }
+  }
+
   inputColor(input: AssetInput, asset: Asset) {
     if (input.exists() && !input.newerThan(asset)) {
       return 'reset';
