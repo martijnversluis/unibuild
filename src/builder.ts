@@ -7,6 +7,7 @@ import DependencyGraph from './dependency_graph';
 import AssetInput from './asset_input';
 import Config from './config';
 import BuildOptions from './build_options';
+import cmd from "./cmd";
 
 class Builder {
   config: Config;
@@ -105,9 +106,11 @@ class Builder {
           this.logger.log(`Writing to ${asset.outfile.path}`);
           asset.outfile.write(output);
           this.logger.log(`Done building ${asset.name}`, ['green']);
-        } else if (asset.command) {
+        }
+
+        if (asset.command) {
           this.logger.log(`Running command: ${asset.command}`, ['yellow']);
-          execSync(asset.command, { stdio: 'inherit' });
+          cmd(asset.command);
           this.logger.log(`Done building ${asset.name}`, ['green']);
         }
       });
