@@ -25,6 +25,10 @@ class Logger {
     let writer = chalk.reset;
 
     styles.forEach((style) => {
+      if (writer[style] === undefined) {
+        throw new Error(`No such style: ${style}`);
+      }
+
       writer = writer[style];
     });
 
