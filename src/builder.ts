@@ -6,7 +6,11 @@ import DependencyGraph from './dependency_graph';
 import AssetInput from './asset_input';
 import Config from './config';
 import cmd from './cmd';
-import BuildOptions from './build_options';
+
+export interface BuildOptions {
+  force: boolean;
+  release: boolean;
+}
 
 class Builder {
   config: Config;
@@ -100,7 +104,9 @@ class Builder {
             return input.read();
           }));
 
-          this.logger.log('Triggering build function...');
+          this.logger.log(
+            `Triggering build function with ${JSON.stringify(options)} and Node env ${process.env.NODE_ENV}`
+          );
           const output = asset.buildFunction(options, ...inputs);
           this.logger.log(`Writing to ${asset.outfile.path}`);
           asset.outfile.write(output);
