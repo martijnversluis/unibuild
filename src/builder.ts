@@ -1,13 +1,12 @@
 import chalk from 'chalk';
-import { execSync } from 'child_process';
 import Asset from './asset';
 import Logger from './logger';
 import BuildStages from './build_stages';
 import DependencyGraph from './dependency_graph';
 import AssetInput from './asset_input';
 import Config from './config';
+import cmd from './cmd';
 import BuildOptions from './build_options';
-import cmd from "./cmd";
 
 class Builder {
   config: Config;
@@ -102,7 +101,7 @@ class Builder {
           }));
 
           this.logger.log('Triggering build function...');
-          const output = asset.buildFunction(...inputs);
+          const output = asset.buildFunction(options, ...inputs);
           this.logger.log(`Writing to ${asset.outfile.path}`);
           asset.outfile.write(output);
           this.logger.log(`Done building ${asset.name}`, ['green']);
