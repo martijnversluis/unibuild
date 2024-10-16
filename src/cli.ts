@@ -51,7 +51,7 @@ class CLI {
       assetNames,
       {
         force: force || false,
-        release: release || false,
+        release: release || process.env.NODE_ENV === 'production',
       },
     );
   }

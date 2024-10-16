@@ -104,9 +104,6 @@ class Builder {
             return input.read();
           }));
 
-          this.logger.log(
-            `Triggering build function with ${JSON.stringify(options)} and Node env ${process.env.NODE_ENV}`
-          );
           const output = asset.buildFunction(options, ...inputs);
           this.logger.log(`Writing to ${asset.outfile.path}`);
           asset.outfile.write(output);
