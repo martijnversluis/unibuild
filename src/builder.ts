@@ -72,7 +72,27 @@ class Builder {
     });
   }
 
+  test() {
+    this.logger.section('Testing...', () => {
+      Object.values(this.testers).forEach((tester) => {
+        this.logger.section(`Tester ${tester.name}`, () => {
+          if (tester.requires.length > 0) {
+            this.logger.section('Building required assets...', () => {
+              this.build(
+                tester.requires.map(asset => asset.name),
+                {force: false, parallel: false, release: false},
+              );
+            });
+          }
+
+          this.logger.log(`Running test command: ${tester.command}`, ['yellow']);
+          cmd(tester.command);
+          this.logger.log(`Done running tester ${tester.name}`, ['green']);
+        });
       });
+    });
+  }
+
   filterAssets(assets: Asset[], options: Partial<BuildOptions>): Asset[] {
     if (options.force) return assets;
 

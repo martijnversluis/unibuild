@@ -45,21 +45,23 @@ class CLI {
       .action(this.lint.bind(this));
 
     program
+      .command('test')
+      .description('Run tests')
+      .action(this.test.bind(this));
+
+    program
       .command('clean')
       .description('Clean assets')
-      .argument('[assets...]', 'asset(s) to clean')
       .action(this.clean.bind(this));
 
     return program;
   }
 
-  build(assetNames: string[], { force, release }: { force?: boolean, release?: boolean }) {
   build(assetNames: string[], { force, parallel, release }: { force?: boolean, parallel?: boolean, release?: boolean }) {
     this.builder.build(
       assetNames,
       {
         force: force || false,
-        release: release || process.env.NODE_ENV === 'production',
         parallel: parallel !== false,
         release: release || false,
       },
@@ -74,6 +76,10 @@ class CLI {
     this.builder.lint({
       fix: fix || false,
     });
+  }
+
+  test() {
+    this.builder.test();
   }
 }
 
