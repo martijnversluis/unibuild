@@ -32,6 +32,10 @@ class AssetFile {
     return false;
   }
 
+  needsRebuild() {
+    return false;
+  }
+
   read() {
     return fs.readFileSync(this.path).toString();
   }
@@ -42,6 +46,10 @@ class AssetFile {
 
   remove() {
     fs.unlinkSync(this.path);
+  }
+
+  toString() {
+    return this.path;
   }
 }
 

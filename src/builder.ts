@@ -1,14 +1,13 @@
-import chalk from 'chalk';
 import Asset from './asset';
 import Logger from './logger';
 import BuildStages from './build_stages';
-import DependencyGraph from './dependency_graph';
 import AssetInput from './asset_input';
 import Config from './config';
 import cmd from './cmd';
 
 export interface BuildOptions {
   force: boolean;
+  parallel: boolean;
   release: boolean;
 }
 
@@ -21,41 +20,65 @@ class Builder {
     return this.config.assets;
   }
 
+  get linters() {
+    return this.config.linters;
+  }
+
+  get testers() {
+    return this.config.testers;
+  }
+
   constructor(config: Config) {
     this.config = config;
   }
 
-  showDependencyTree() {
-    console.log(
-      new BuildStages(
-        new DependencyGraph(
-          Object.values(this.assets),
-        ),
-      ),
-    );
-  }
+  build(assetNames: string[], options: Partial<BuildOptions>): void {
+    const requestedAssets = this.selectAssets(assetNames, options);
+    const assetsThatNeedBuild = this.filterAssets(requestedAssets, options);
+    const builtAssetsWithDependencies = this.addDependencies(assetsThatNeedBuild);
+    const buildStages = new BuildStages(builtAssetsWithDependencies);
 
-  status() {
-    Object.values(this.assets).forEach((asset) => {
-      const assetColor = this.assetColor(asset, { force: false, release: false });
-      console.log(chalk[assetColor].underline.bold(`${asset.path}`));
-      console.log('  inputs:');
+    this.logger.log(`Build ${builtAssetsWithDependencies.length} assets`, ['yellow']);
 
-      asset.input.forEach((input: AssetInput) => {
-        const color = this.inputColor(input, asset);
-        const text = (input instanceof Asset) ? `${chalk.bold(input.name)} [${input.path}]` : input.path;
-        console.log(chalk[color](`    - ${text}`));
+    buildStages.grouping.forEach((group, index) => {
+      this.logger.section(`Stage ${index + 1}`, () => {
+        group.forEach((name) => {
+          const asset = this.assets[name];
+          this.buildAsset(asset, options);
+        });
       });
-
-      console.log(`  output: ${asset.outfile.path}`);
-      console.log();
     });
   }
 
-  build(assetNames: string[], options: BuildOptions) {
-    this.selectAssets(assetNames).forEach((asset: Asset) => {
-      this.buildAsset(asset, options);
+
+      });
+  filterAssets(assets: Asset[], options: Partial<BuildOptions>): Asset[] {
+    if (options.force) return assets;
+
+    return assets.filter((asset) => {
+      if (!options.release && asset.releaseOnly) return false;
+
+      return asset.needsBuilding(options);
     });
+  }
+
+  addDependencies(assets: Asset[]): Asset[] {
+    let allAssets : Set<Asset> = new Set();
+
+    assets.forEach((asset) => {
+      allAssets.add(asset);
+
+      asset.input.forEach((input) => {
+        if (input.needsRebuild()) {
+          allAssets = new Set([
+            ...allAssets,
+            ...this.addDependencies([input as Asset])
+          ]);
+        }
+      });
+    });
+
+    return Array.from(allAssets);
   }
 
   clean(assetNames: string[]) {
@@ -64,9 +87,13 @@ class Builder {
     });
   }
 
-  selectAssets(assetNames: string[]) {
+  selectAssets(assetNames: string[], options?: Partial<BuildOptions>) {
+    const buildOptions = { release: true, ...options };
+
     if (assetNames.length === 0) {
-      return Object.values(this.assets);
+      return Object
+        .values(this.assets)
+        .filter((asset) => buildOptions.release || !asset.releaseOnly);
     }
 
     return assetNames.map((name) => {
@@ -80,45 +107,28 @@ class Builder {
     });
   }
 
-  buildAsset(asset: Asset, options: BuildOptions) {
-    if (asset.needsBuilding(options)) {
-      this.logger.log(`Building ${asset.name}`, ['yellow']);
+  buildAsset(asset: Asset, options: Partial<BuildOptions>) {
+    this.logger.log(`Building ${asset.name}`, ['yellow']);
 
-      this.logger.indent(() => {
-        this.logger.log('Building dependencies', ['yellow']);
+    this.logger.indent(() => {
+      if (asset.buildFunction) {
+        const inputs = this.logger.section('Reading inputs...', () => asset.input.map((input) => {
+          this.logger.log(`Reading ${input.path}`);
+          return input.read();
+        }));
 
-        this.logger.indent(() => {
-          asset.input.forEach((input: AssetInput) => {
-            if (input instanceof Asset) {
-              this.buildAsset(input, options);
-            }
-          });
-        });
+        const output = asset.buildFunction(options, ...inputs);
+        this.logger.log(`Writing to ${asset.outfile.path}`);
+        asset.outfile.write(output);
+        this.logger.log(`Done building ${asset.name}`, ['green']);
+      }
 
-        this.logger.log('Done building dependencies', ['green']);
-        this.logger.log(`Building ${asset.name}`, ['yellow']);
-
-        if (asset.buildFunction) {
-          const inputs = this.logger.section('Reading inputs...', () => asset.input.map((input) => {
-            this.logger.log(`Reading ${input.path}`);
-            return input.read();
-          }));
-
-          const output = asset.buildFunction(options, ...inputs);
-          this.logger.log(`Writing to ${asset.outfile.path}`);
-          asset.outfile.write(output);
-          this.logger.log(`Done building ${asset.name}`, ['green']);
-        }
-
-        if (asset.command) {
-          this.logger.log(`Running command: ${asset.command}`, ['yellow']);
-          cmd(asset.command);
-          this.logger.log(`Done building ${asset.name}`, ['green']);
-        }
-      });
-    } else {
-      this.logger.log(`Asset ${asset.name} - up to date`, ['reset']);
-    }
+      if (asset.command) {
+        this.logger.log(`Running command: ${asset.command}`, ['yellow']);
+        cmd(asset.command);
+        this.logger.log(`Done building ${asset.name}`, ['green']);
+      }
+    });
   }
 
   cleanAsset(asset: Asset) {

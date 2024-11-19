@@ -26,7 +26,7 @@ class Asset {
     this.releaseOnly = !!options.releaseOnly;
 
     if (options.command) {
-      this.command = generateCommand(options.command, this.outfile.path);
+      this.command = generateCommand<Asset>(options.command, this);
     }
   }
 
@@ -48,9 +48,13 @@ class Asset {
     return this.input.some((input) => input instanceof Asset);
   }
 
-  needsBuilding(options: { force: boolean,  release: boolean }) {
+  needsBuilding(options: Partial<{ force: boolean,  release: boolean }>) {
     return (!this.releaseOnly || options.release) &&
       (options.force || !this.outfileExists() || this.inputChanged());
+  }
+
+  needsRebuild() {
+    return !this.outfileExists() || this.inputChanged() || this.inputNeedsRebuild();
   }
 
   exists() {
@@ -69,6 +73,10 @@ class Asset {
     return this.input.some((input) => input.newerThan(this));
   }
 
+  inputNeedsRebuild() {
+    return this.input.some((input) => input.needsRebuild());
+  }
+
   newerThan(other: AssetInput) {
     return this.outfile.newerThan(other);
   }
@@ -79,6 +87,10 @@ class Asset {
 
   read() {
     return this.outfile.read();
+  }
+
+  toString() {
+    return this.outfile.toString();
   }
 }
 

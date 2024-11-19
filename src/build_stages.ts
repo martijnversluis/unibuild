@@ -1,34 +1,38 @@
-import DependencyGraph from './dependency_graph';
-import DependencyNode from './dependency_node';
+import Asset from './asset';
+import AssetInput from './asset_input';
 
 class BuildStages {
   grouping: string[][] = [];
 
-  constructor(dependencyGraph: DependencyGraph) {
-    Object.values(dependencyGraph.roots).forEach((root: DependencyNode) => {
-      this.groupNodes(root);
-    });
+  constructor(assets: Asset[]) {
+    const stages: string[][] = [];
+    const visited: Set<string> = new Set();
 
-    this.grouping = this.filterNodes(this.grouping).filter((row) => row.length > 0);
-  }
+    while (visited.size < assets.length) {
+      const group: string[] = [];
 
-  groupNodes(node: DependencyNode, level = 0) {
-    this.grouping[level] ||= [];
-    this.grouping[level].push(node.asset.name);
+      assets.forEach((asset: Asset) => {
+        if (visited.has(asset.name)) return;
 
-    node.dependents.forEach((dependent: DependencyNode) => {
-      this.groupNodes(dependent, level + 1);
-    });
-  }
+        if (asset.input.every((input: AssetInput) => {
+          if (!input.canBeBuilt()) return true;
 
-  filterNodes(matrix: string[][]): string[][] {
-    const seen = new Set<string>();
+          const inputAsset = input as Asset;
+          const inputBuildRequested = assets.includes(inputAsset);
+          const alreadyPlanned = visited.has(inputAsset.name);
+          const inCurrentGroup = group.includes(inputAsset.name);
 
-    return matrix.map((row) => {
-      const filteredRow = row.filter((item) => !seen.has(item));
-      filteredRow.forEach((item) => seen.add(item));
-      return Array.from(new Set(filteredRow));
-    });
+          return (alreadyPlanned || !inputBuildRequested) && !inCurrentGroup;
+        })) {
+          group.push(asset.name);
+          visited.add(asset.name);
+        }
+      });
+
+      stages.push(group);
+    }
+
+    this.grouping = stages;
   }
 }
 
