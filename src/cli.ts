@@ -35,7 +35,6 @@ class CLI {
       .argument('[assets...]', 'asset(s) to build')
       .option('-f, --force', 'Force re-build')
       .option('-r, --release', 'Build for release')
-      .option('--no-parallel', 'Disable parallel building')
       .action(this.build.bind(this));
 
     program
@@ -57,12 +56,11 @@ class CLI {
     return program;
   }
 
-  build(assetNames: string[], { force, parallel, release }: { force?: boolean, parallel?: boolean, release?: boolean }) {
+  build(assetNames: string[], { force, release }: { force?: boolean, release?: boolean }) {
     this.builder.build(
       assetNames,
       {
         force: force || false,
-        parallel: parallel !== false,
         release: release || false,
       },
     );
