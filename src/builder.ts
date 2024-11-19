@@ -50,6 +50,27 @@ class Builder {
     });
   }
 
+  lint({ fix }: { fix: boolean }) {
+    this.logger.section('Linting...', () => {
+      Object.values(this.linters).forEach((linter) => {
+        this.logger.section(`Linter ${linter.name}`, () => {
+          if (linter.requires.length > 0) {
+            this.logger.section('Building required assets...', () => {
+              this.build(
+                linter.requires.map(asset => asset.name),
+                {force: false, parallel: false, release: false},
+              );
+            });
+          }
+
+          const command = fix && linter.autofixCommand ? linter.autofixCommand : linter.command;
+          this.logger.log(`Running linter command: ${command}`, ['yellow']);
+          cmd(command);
+          this.logger.log(`Done running linter ${linter.name}`, ['green']);
+        });
+      });
+    });
+  }
 
       });
   filterAssets(assets: Asset[], options: Partial<BuildOptions>): Asset[] {

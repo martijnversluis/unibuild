@@ -39,6 +39,12 @@ class CLI {
       .action(this.build.bind(this));
 
     program
+      .command('lint')
+      .description('Lint assets')
+      .option('-f, --fix', 'Fix linting issues when possible')
+      .action(this.lint.bind(this));
+
+    program
       .command('clean')
       .description('Clean assets')
       .argument('[assets...]', 'asset(s) to clean')
@@ -62,6 +68,12 @@ class CLI {
 
   clean(assetNames: string[]) {
     this.builder.clean(assetNames);
+  }
+
+  lint({ fix }: { fix?: boolean }) {
+    this.builder.lint({
+      fix: fix || false,
+    });
   }
 }
 
