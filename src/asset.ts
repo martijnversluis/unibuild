@@ -50,7 +50,7 @@ class Asset {
 
   needsBuilding(options: Partial<{ force: boolean,  release: boolean }>) {
     return (!this.releaseOnly || options.release) &&
-      (options.force || !this.outfileExists() || this.inputChanged());
+      (options.force || this.outfileMissing() || this.inputChanged());
   }
 
   needsRebuild() {
@@ -59,6 +59,10 @@ class Asset {
 
   exists() {
     return this.outfileExists();
+  }
+
+  outfileMissing() {
+    return !this.outfileExists();
   }
 
   outfileExists() {

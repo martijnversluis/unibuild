@@ -58,7 +58,7 @@ class Builder {
             this.logger.section('Building required assets...', () => {
               this.build(
                 linter.requires.map(asset => asset.name),
-                {force: false, parallel: false, release: false},
+                { force: false, parallel: false, release: true },
               );
             });
           }
@@ -80,7 +80,7 @@ class Builder {
             this.logger.section('Building required assets...', () => {
               this.build(
                 tester.requires.map(asset => asset.name),
-                {force: false, parallel: false, release: false},
+                { force: false, parallel: false, release: true },
               );
             });
           }
@@ -97,8 +97,6 @@ class Builder {
     if (options.force) return assets;
 
     return assets.filter((asset) => {
-      if (!options.release && asset.releaseOnly) return false;
-
       return asset.needsBuilding(options);
     });
   }
