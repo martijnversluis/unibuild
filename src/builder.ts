@@ -181,26 +181,6 @@ class Builder {
       this.logger.log(`File ${asset.outfile.path} not found`, ['yellow']);
     }
   }
-
-  inputColor(input: AssetInput, asset: Asset) {
-    if (input.exists() && !input.newerThan(asset)) {
-      return 'reset';
-    }
-
-    if (!input.exists() && !input.canBeBuilt()) {
-      return 'red';
-    }
-
-    return 'yellow';
-  }
-
-  assetColor(asset: Asset, options: BuildOptions) {
-    if (asset.needsBuilding(options)) {
-      return 'yellow';
-    }
-
-    return 'reset';
-  }
 }
 
 export default Builder;
