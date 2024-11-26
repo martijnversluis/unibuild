@@ -3,18 +3,20 @@ import Asset from './asset';
 
 export type CommandGenerator<Type> = (input: Type) => string | string[];
 
-export function generateCommand<Type>(command: string | string[] | CommandGenerator<Type>, input: Type): string {
-  let commandArray: string[] = [];
-
+function stringifyCommand(command: string | string[]): string {
   if (typeof command === 'string') {
-    commandArray = [command];
-  } else if (Array.isArray(command)) {
-    commandArray = [...command];
-  } else {
-    commandArray = [...command(input)];
+    return command;
   }
 
-  return commandArray.flat().join(' && ');
+  return command.join(' && ');
+}
+
+export function generateCommand<Type>(command: string | string[] | CommandGenerator<Type>, input: Type): string {
+  if (typeof command === 'function') {
+    return stringifyCommand(command(input));
+  }
+
+  return stringifyCommand(command);
 }
 
 export default function cmd(command: string): void {
