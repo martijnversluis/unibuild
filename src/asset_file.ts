@@ -36,6 +36,10 @@ class AssetFile {
     return false;
   }
 
+  isFile() {
+    return fs.lstatSync(this.path).isFile();
+  }
+
   read() {
     return fs.readFileSync(this.path).toString();
   }

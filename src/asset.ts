@@ -2,7 +2,7 @@ import AssetFile from './asset_file';
 import AssetInput from './asset_input';
 import BuildFunction from './build_function';
 import AssetOptions from './asset_options';
-import {generateCommand} from "./cmd";
+import { generateCommand } from './cmd';
 
 class Asset {
   buildFunction?: BuildFunction;
@@ -59,6 +59,10 @@ class Asset {
 
   exists() {
     return this.outfileExists();
+  }
+
+  isFile() {
+    return this.outfile.isFile();
   }
 
   outfileMissing() {

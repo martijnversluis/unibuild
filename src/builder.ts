@@ -152,8 +152,13 @@ class Builder {
     this.logger.indent(() => {
       if (asset.buildFunction) {
         const inputs = this.logger.section('Reading inputs...', () => asset.input.map((input) => {
-          this.logger.log(`Reading ${input.path}`);
-          return input.read();
+          if (input.isFile()) {
+            this.logger.log(`Reading ${input.path}`);
+            return input.read();
+          }
+
+          this.logger.log(`Input ${input.path} is not a file, returning the path`, ['yellow']);
+          return input.path;
         }));
 
         const output = asset.buildFunction(options, ...inputs);
