@@ -3,8 +3,8 @@ import Asset from './asset';
 import Linter from './linter';
 
 interface LinterOptions {
-  command: string | CommandGenerator<Linter>;
-  autofixCommand?: string | CommandGenerator<Linter>;
+  command: string | string[] | CommandGenerator<Linter>;
+  autofixCommand?: string | string[] | CommandGenerator<Linter>;
   requires: Asset | Asset[];
 }
 
