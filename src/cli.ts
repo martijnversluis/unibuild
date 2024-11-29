@@ -51,6 +51,7 @@ class CLI {
     program
       .command('clean')
       .description('Clean assets')
+      .argument('[assets...]', 'asset(s) to build')
       .action(this.clean.bind(this));
 
     return program;
