@@ -54,6 +54,28 @@ class CLI {
       .argument('[assets...]', 'asset(s) to build')
       .action(this.clean.bind(this));
 
+    program
+      .command('ci')
+      .description('Build, lint, test and build release')
+      .action(this.ci.bind(this));
+
+    program
+      .command('bump')
+      .description('Bump version')
+      .argument('<version>', 'Version to bump to')
+      .action(this.bump.bind(this));
+
+    program
+      .command('publish')
+      .description('Publish release')
+      .action(this.publish.bind(this));
+
+    program
+      .command('release')
+      .description('Build, lint, test, build release and publish')
+      .argument('<version>', 'Version to bump to')
+      .action(this.release.bind(this));
+
     return program;
   }
 
@@ -79,6 +101,35 @@ class CLI {
 
   test() {
     this.builder.test();
+  }
+
+  ci() {
+    this.build([], { release: false });
+    this.lint({ fix: false });
+    this.test();
+    this.build([], { release: true });
+  }
+
+  bump(version: string) {
+    this.builder.bump(version);
+  }
+
+  publish() {
+    this.builder.publish();
+  }
+
+  gitPush() {
+    this.builder.gitPush();
+  }
+
+  release(version: string) {
+    this.build([], { release: false });
+    this.lint({ fix: false });
+    this.test();
+    this.build([], { release: true });
+    this.bump(version);
+    this.gitPush();
+    this.publish();
   }
 }
 

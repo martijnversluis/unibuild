@@ -186,6 +186,24 @@ class Builder {
       this.logger.log(`File ${asset.outfile.path} not found`, ['yellow']);
     }
   }
+
+  bump(version: string) {
+    this.logger.log(`Bumping version to ${version}`, ['yellow']);
+    cmd(`npm version ${version}`);
+    this.logger.log(`Done bumping version to ${version}`, ['green']);
+  }
+
+  gitPush() {
+    this.logger.log('Pushing commit and tag to git', ['yellow']);
+    cmd('git push && git push --tags');
+    this.logger.log('Done pushing to git', ['green']);
+  }
+
+  publish() {
+    this.logger.log('Publishing to npm', ['yellow']);
+    cmd('yarn npm publish');
+    this.logger.log('Done publishing to npm', ['green']);
+  }
 }
 
 export default Builder;
