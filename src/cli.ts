@@ -126,7 +126,7 @@ class CLI {
     this.build([], { release: false });
     this.lint({ fix: false });
     this.test();
-    this.build([], { release: true });
+    this.build([], { force: true, release: true });
     this.bump(version);
     this.gitPush();
     this.publish();
