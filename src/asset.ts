@@ -1,15 +1,15 @@
 import AssetFile from './asset_file';
-import AssetInput from './asset_input';
 import BuildFunction from './build_function';
 import AssetOptions from './asset_options';
 import { generateCommand } from './cmd';
+import IAsset from './i_asset';
 
-class Asset {
+class Asset implements IAsset {
   buildFunction?: BuildFunction;
 
   command?: string;
 
-  input: AssetInput[];
+  input: IAsset[];
 
   name: string;
 
@@ -30,7 +30,7 @@ class Asset {
     }
   }
 
-  static normalizeInput(inputs: string | AssetInput | (string | AssetInput)[]): AssetInput[] {
+  static normalizeInput(inputs: string | IAsset | (string | IAsset)[]): IAsset[] {
     return [inputs].flat().map((input) => {
       if (typeof input === 'string') {
         return new AssetFile(input);
@@ -40,64 +40,78 @@ class Asset {
     });
   }
 
-  get path() {
+  get path(): string {
     return this.outfile.path;
   }
 
-  hasAssetDependencies() {
+  hasAssetDependencies(): boolean {
     return this.input.some((input) => input instanceof Asset);
   }
 
-  needsBuilding(options: Partial<{ force: boolean,  release: boolean }>) {
-    return (!this.releaseOnly || options.release) &&
-      (options.force || this.outfileMissing() || this.inputChanged());
+  async needsBuilding(options: Partial<{ force: boolean,  release: boolean }>): Promise<boolean> {
+    const outfileMissing = await this.outfileMissing();
+    const inputChanged = await this.inputChanged();
+
+    return (!this.releaseOnly || !!options.release) && (options.force || outfileMissing || inputChanged);
   }
 
-  needsRebuild() {
-    return !this.outfileExists() || this.inputChanged() || this.inputNeedsRebuild();
+  async needsRebuild(): Promise<boolean> {
+    return !(await this.outfileExists()) || (await this.inputChanged()) || (await this.inputNeedsRebuild());
   }
 
-  exists() {
-    return this.outfileExists();
+  async exists(): Promise<boolean> {
+    return await this.outfileExists();
   }
 
-  isFile() {
-    return this.outfile.isFile();
+  async isFile(): Promise<boolean> {
+    return await this.outfile.isFile();
   }
 
-  outfileMissing() {
-    return !this.outfileExists();
+  async outfileMissing(): Promise<boolean> {
+    return !(await this.outfileExists());
   }
 
-  outfileExists() {
-    return this.outfile.exists();
+  async outfileExists(): Promise<boolean> {
+    return await this.outfile.exists();
   }
 
-  modifiedTime() {
-    return this.outfile.modifiedTime();
+  async modifiedTime(): Promise<number> {
+    return await this.outfile.modifiedTime();
   }
 
-  inputChanged() {
-    return this.input.some((input) => input.newerThan(this));
+  async inputChanged(): Promise<boolean> {
+    for (const input of this.input) {
+      if (await input.newerThan(this)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  inputNeedsRebuild() {
-    return this.input.some((input) => input.needsRebuild());
+  async inputNeedsRebuild(): Promise<boolean> {
+    for (const input of this.input) {
+      if (await input.needsRebuild()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
-  newerThan(other: AssetInput) {
-    return this.outfile.newerThan(other);
+  async newerThan(other: IAsset): Promise<boolean> {
+    return await this.outfile.newerThan(other);
   }
 
-  canBeBuilt() {
+  async canBeBuilt(): Promise<boolean> {
     return true;
   }
 
-  read() {
-    return this.outfile.read();
+  async read(): Promise<string> {
+    return await this.outfile.read();
   }
 
-  toString() {
+  toString(): string {
     return this.outfile.toString();
   }
 }

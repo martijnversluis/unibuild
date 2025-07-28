@@ -1,5 +1,6 @@
 import Asset from './asset';
-import AssetInput from './asset_input';
+import IAsset from './i_asset';
+
 
 class BuildStages {
   grouping: string[][] = [];
@@ -14,7 +15,7 @@ class BuildStages {
       assets.forEach((asset: Asset) => {
         if (visited.has(asset.name)) return;
 
-        if (asset.input.every((input: AssetInput) => {
+        if (asset.input.every((input: IAsset) => {
           if (!input.canBeBuilt()) return true;
 
           const inputAsset = input as Asset;

@@ -12,13 +12,14 @@ class CLI {
   program: Command;
 
   constructor(config: Config) {
+    console.log('Config:', config);
     this.config = config;
     this.builder = new Builder(this.config);
     this.program = this.buildProgram();
   }
 
-  run() {
-    this.program.parse();
+  async run() {
+    await this.program.parseAsync();
   }
 
   buildProgram(): Command {
@@ -79,57 +80,58 @@ class CLI {
     return program;
   }
 
-  build(assetNames: string[], { force, release }: { force?: boolean, release?: boolean }) {
-    this.builder.build(
+  async build(assetNames: string[], { force, release }: { force?: boolean, release?: boolean }) {
+    await this.builder.build(
       assetNames,
       {
         force: force || false,
         release: release || false,
+        parallel: true,
       },
     );
   }
 
-  clean(assetNames: string[]) {
-    this.builder.clean(assetNames);
+  async clean(assetNames: string[]) {
+    await this.builder.clean(assetNames);
   }
 
-  lint({ fix }: { fix?: boolean }) {
-    this.builder.lint({
+  async lint({ fix }: { fix?: boolean }) {
+    await this.builder.lint({
       fix: fix || false,
     });
   }
 
-  test() {
-    this.builder.test();
+  async test() {
+    await this.builder.test();
   }
 
-  ci() {
-    this.build([], { release: false });
-    this.lint({ fix: false });
-    this.test();
-    this.build([], { release: true });
+  async ci() {
+    await this.build([], { release: false });
+    await this.lint({ fix: false });
+    await this.test();
+    await this.build([], { release: true });
   }
 
-  bump(version: string) {
-    this.builder.bump(version);
+  async bump(version: string) {
+    await this.builder.bump(version);
   }
 
-  publish() {
-    this.builder.publish();
+  async publish() {
+    await this.builder.publish();
   }
 
-  gitPush() {
-    this.builder.gitPush();
+  async gitPush() {
+    await this.builder.gitPush();
   }
 
-  release(version: string) {
-    this.build([], { release: false });
-    this.lint({ fix: false });
-    this.test();
-    this.build([], { force: true, release: true });
-    this.bump(version);
-    this.gitPush();
-    this.publish();
+  async release(version: string) {
+    await this.build([], { release: false });
+    await this.lint({ fix: false });
+    await this.test();
+    await this.build([], { force: true, release: true });
+    await this.bump(version);
+    await this.gitPush();
+    await this.publish();
   }
 }
 
