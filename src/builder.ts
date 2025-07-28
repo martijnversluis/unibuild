@@ -1,7 +1,6 @@
 import Asset from './asset';
 import Logger from './logger';
 import BuildStages from './build_stages';
-import AssetInput from './asset_input';
 import Config from './config';
 import cmd from './cmd';
 

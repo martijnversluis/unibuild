@@ -7,14 +7,11 @@
   "version": "1.4.0",
   "description": "The simplest build tool in the universe",
   "source": "src/index.ts",
-  "main": "lib/index.js",
+  "main": "src/index.ts",
   "files": [
-    "lib/**/*.js"
+    "src/**/*.ts"
   ],
-  "scripts": {
-    "build": "rm -rf .parcel-cache lib && parcel build --no-cache",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "bin": "./bin/unibuild.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/martijnversluis/unibuild.git"
@@ -34,20 +31,10 @@
   "packageManager": "yarn@4.2.2+sha512.c44e283c54e02de9d1da8687025b030078c1b9648d2895a65aab8e64225bfb7becba87e1809fc0b4b6778bbd47a1e2ab6ac647de4c5e383a53a7c17db6c3ff4b",
   "dependencies": {
     "chalk": "^5.3.0",
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "tsx": "^4.10.5"
   },
   "devDependencies": {
-    "@parcel/packager-ts": "2.12.0",
-    "@parcel/transformer-typescript-types": "2.12.0",
-    "@types/events": "^3",
-    "@types/node": "^22.7.4",
-    "@types/path-browserify": "^1",
-    "buffer": "^5.5.0||^6.0.0",
-    "events": "^3.1.0",
-    "parcel": "^2.12.0",
-    "path-browserify": "^1.0.0",
-    "process": "^0.11.10",
-    "typescript": ">=3.0.0",
-    "url": "^0.11.0"
+    "@types/node": "^24.0.10"
   }
 }
