@@ -1,9 +1,9 @@
 import Asset from './asset';
 import AssetOptions from './asset_options';
-import LinterOptions from "./linter_options";
 import Linter from './linter';
+import LinterOptions from './linter_options';
+import Tester from './tester';
 import TesterOptions from './tester_options';
-import Tester from "./tester";
 
 class Config {
   assets: Record<string, Asset> = {};

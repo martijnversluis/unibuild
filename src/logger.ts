@@ -38,7 +38,7 @@ class Logger {
   indentString(string: string, level = 0, indentString = '  ') {
     let indentation = '';
 
-    for (let i = 0; i < level; i++) {
+    for (let i = 0; i < level; i += 1) {
       indentation += indentString;
     }
 

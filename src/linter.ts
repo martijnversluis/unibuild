@@ -1,6 +1,7 @@
-import LinterOptions from './linter_options';
-import { generateCommand } from './cmd';
 import Asset from './asset';
+import LinterOptions from './linter_options';
+
+import { generateCommand } from './cmd';
 
 class Linter {
   name: string;

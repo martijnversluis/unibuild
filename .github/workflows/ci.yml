@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      matrix:
+        node-version: [ 18.x, 20.x, 22.x, 24.x ]
+    name: Ubuntu NodeJS ${{ matrix.node-version }} sample
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install node modules
+        run: yarn install
+      - name: Run tests
+        run: yarn lint
+
+  check-trailing-whitespace:
+    runs-on: ubuntu-latest
+    name: Check trailing whitespace
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install node modules
+        run: yarn install
+      - name: Check trailing whitespace
+        run: git ls-files | yarn tsx scripts/check_trailing_whitespace.ts
+
+  check-deprecated-packages:
+    runs-on: ubuntu-latest
+    name: Check deprecated packages
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Check deprecated packages
+        run: scripts/check_deprecated_packages
