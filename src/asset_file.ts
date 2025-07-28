@@ -1,58 +1,66 @@
-import * as fs from 'fs';
-import AssetInput from './asset_input';
+import * as fs from 'fs/promises';
+import IAsset from './i_asset';
 
-class AssetFile {
+class AssetFile implements IAsset {
   path: string;
 
   constructor(path: string) {
     this.path = path;
   }
 
-  modifiedTime(): number {
-    if (!this.exists()) {
+  async modifiedTime(): Promise<number> {
+    if (!(await this.exists())) {
       return 0;
     }
 
-    return fs.statSync(this.path).mtimeMs;
+    const stats = await fs.stat(this.path);
+    return stats.mtimeMs;
   }
 
-  newerThan(other: AssetInput) {
-    return this.modifiedTime() > other.modifiedTime();
+  async newerThan(other: IAsset): Promise<boolean> {
+    return (await this.modifiedTime()) > (await other.modifiedTime());
   }
 
-  exists() {
-    return fs.existsSync(this.path);
+  async exists(): Promise<boolean> {
+    try {
+      await fs.access(this.path);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
-  canBeBuilt() {
+  async canBeBuilt(): Promise<boolean> {
     return false;
   }
 
-  needsBuilding() {
+  async needsBuilding(): Promise<boolean> {
     return false;
   }
 
-  needsRebuild() {
+  async needsRebuild(): Promise<boolean> {
     return false;
   }
 
-  isFile() {
-    return fs.lstatSync(this.path).isFile();
+  async isFile(): Promise<boolean> {
+    const stats = await fs.lstat(this.path);
+    return stats.isFile();
   }
 
-  read() {
-    return fs.readFileSync(this.path).toString();
+  async read(): Promise<string> {
+    const data = await fs.readFile(this.path);
+    return data.toString();
   }
 
-  write(contents: string) {
-    fs.writeFileSync(this.path, contents);
+  async write(contents: string): Promise<void> {
+    await fs.writeFile(this.path, contents);
   }
 
-  remove() {
-    fs.unlinkSync(this.path);
+  async remove(): Promise<void> {
+    await fs.unlink(this.path);
   }
 
-  toString() {
+  toString(): string {
     return this.path;
   }
 }

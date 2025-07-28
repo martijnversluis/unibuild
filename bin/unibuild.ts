@@ -13,7 +13,9 @@ async function findAndLoadConfig(): Promise<Config> {
   for (const filename of configFilenames) {
     const fullPath = resolve(cwd, filename);
     if (existsSync(fullPath)) {
-      const configModule = await import(pathToFileURL(fullPath).href);
+      const fileURL = pathToFileURL(fullPath).href;
+      console.log('Importing: ', fileURL);
+      const configModule = await import(fileURL);
       return configModule.default;
     }
   }
@@ -23,7 +25,7 @@ async function findAndLoadConfig(): Promise<Config> {
 (async () => {
   try {
     const config = await findAndLoadConfig();
-    new CLI(config).run();
+    await new CLI(config).run();
   } catch (err) {
     console.error('[unibuild] Error:', err);
     process.exit(1);

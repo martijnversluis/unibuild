@@ -3,6 +3,7 @@ import Logger from './logger';
 import BuildStages from './build_stages';
 import Config from './config';
 import cmd from './cmd';
+import ora from 'ora';
 
 export interface BuildOptions {
   force: boolean;
@@ -31,28 +32,39 @@ class Builder {
     this.config = config;
   }
 
-  build(assetNames: string[], options: Partial<BuildOptions>): void {
+  async build(assetNames: string[], options: BuildOptions): Promise<void> {
     const requestedAssets = this.selectAssets(assetNames, options);
-    const assetsThatNeedBuild = this.filterAssets(requestedAssets, options);
-    const builtAssetsWithDependencies = this.addDependencies(assetsThatNeedBuild);
+    const assetsThatNeedBuild = await this.filterAssets(requestedAssets, options);
+    const builtAssetsWithDependencies = await this.addDependencies(assetsThatNeedBuild);
     const buildStages = new BuildStages(builtAssetsWithDependencies);
 
     this.logger.log(`Build ${builtAssetsWithDependencies.length} assets`, ['yellow']);
 
-    buildStages.grouping.forEach((group, index) => {
-      this.logger.section(`Stage ${index + 1}`, () => {
-        group.forEach((name) => {
-          const asset = this.assets[name];
-          this.buildAsset(asset, options);
-        });
+    for (const group of buildStages.grouping) {
+      const tasks = group.map(async (name) => {
+        const spinner = ora(name).start(name);
+        try {
+          await this.buildAsset(this.assets[name], options);
+          spinner.succeed();
+        } catch (error) {
+          spinner.fail(`Failed to build ${name}: ${error}`);
+        }
       });
-    });
+
+      if (options.parallel) {
+        await Promise.all(tasks);
+      } else {
+        for (const task of tasks) {
+          await task;
+        }
+      }
+    }
   }
 
-  lint({ fix }: { fix: boolean }) {
+  async lint({ fix }: { fix: boolean }) {
     this.logger.section('Linting...', () => {
       Object.values(this.linters).forEach((linter) => {
-        this.logger.section(`Linter ${linter.name}`, () => {
+        this.logger.section(`Linter ${linter.name}`, async () => {
           if (linter.requires.length > 0) {
             this.logger.section('Building required assets...', () => {
               this.build(
@@ -64,65 +76,65 @@ class Builder {
 
           const command = fix && linter.autofixCommand ? linter.autofixCommand : linter.command;
           this.logger.log(`Running linter command: ${command}`, ['yellow']);
-          cmd(command);
+          const _output = await cmd(command);
           this.logger.log(`Done running linter ${linter.name}`, ['green']);
         });
       });
     });
   }
 
-  test() {
-    this.logger.section('Testing...', () => {
-      Object.values(this.testers).forEach((tester) => {
-        this.logger.section(`Tester ${tester.name}`, () => {
-          if (tester.requires.length > 0) {
-            this.logger.section('Building required assets...', () => {
-              this.build(
-                tester.requires.map(asset => asset.name),
-                { force: false, parallel: false, release: true },
-              );
-            });
-          }
+  async test() {
+    for (const tester of Object.values(this.testers)) {
+      if (tester.requires.length > 0) {
+        await this.build(
+          tester.requires.map(asset => asset.name),
+          { force: false, parallel: false, release: true },
+        );
+      }
 
-          this.logger.log(`Running test command: ${tester.command}`, ['yellow']);
-          cmd(tester.command);
-          this.logger.log(`Done running tester ${tester.name}`, ['green']);
-        });
-      });
-    });
+      this.logger.log(`Running test command: ${tester.command}`, ['yellow']);
+      await cmd(tester.command);
+      this.logger.log(`Done running tester ${tester.name}`, ['green']);
+    }
   }
 
-  filterAssets(assets: Asset[], options: Partial<BuildOptions>): Asset[] {
+  async filterAssets(assets: Asset[], options: Partial<BuildOptions>): Promise<Asset[]> {
     if (options.force) return assets;
 
-    return assets.filter((asset) => {
-      return asset.needsBuilding(options);
-    });
+    const filteredAssets: Asset[] = [];
+
+    for (const asset of assets) {
+      if (await asset.needsBuilding(options)) {
+        filteredAssets.push(asset);
+      }
+    }
+
+    return filteredAssets;
   }
 
-  addDependencies(assets: Asset[]): Asset[] {
+  async addDependencies(assets: Asset[]): Promise<Asset[]> {
     let allAssets : Set<Asset> = new Set();
 
-    assets.forEach((asset) => {
+    for (const asset of assets) {
       allAssets.add(asset);
 
-      asset.input.forEach((input) => {
-        if (input.needsRebuild()) {
+      for (const input of asset.input) {
+        if (await input.needsRebuild()) {
           allAssets = new Set([
             ...allAssets,
-            ...this.addDependencies([input as Asset])
+            ...(await this.addDependencies([input as Asset]))
           ]);
         }
-      });
-    });
+      }
+    }
 
     return Array.from(allAssets);
   }
 
-  clean(assetNames: string[]) {
-    this.selectAssets(assetNames).forEach((asset: Asset) => {
-      this.cleanAsset(asset);
-    });
+  async clean(assetNames: string[]) {
+    for (const asset of this.selectAssets(assetNames)) {
+      await this.cleanAsset(asset);
+    }
   }
 
   selectAssets(assetNames: string[], options?: Partial<BuildOptions>) {
@@ -145,62 +157,54 @@ class Builder {
     });
   }
 
-  buildAsset(asset: Asset, options: Partial<BuildOptions>) {
-    this.logger.log(`Building ${asset.name}`, ['yellow']);
-
-    this.logger.indent(() => {
-      if (asset.buildFunction) {
-        const inputs = this.logger.section('Reading inputs...', () => asset.input.map((input) => {
-          if (input.isFile()) {
-            this.logger.log(`Reading ${input.path}`);
+  async buildAsset(asset: Asset, options: BuildOptions) {
+    if (asset.buildFunction) {
+      const inputs: string[] = await Promise.all(
+        asset.input.map(async (input) => {
+          if (await input.isFile()) {
             return input.read();
           }
 
-          this.logger.log(`Input ${input.path} is not a file, returning the path`, ['yellow']);
           return input.path;
-        }));
+        })
+      );
 
-        const output = asset.buildFunction(options, ...inputs);
-        this.logger.log(`Writing to ${asset.outfile.path}`);
-        asset.outfile.write(output);
-        this.logger.log(`Done building ${asset.name}`, ['green']);
-      }
+      const output = asset.buildFunction(options, ...inputs);
+      await asset.outfile.write(output);
+    }
 
-      if (asset.command) {
-        this.logger.log(`Running command: ${asset.command}`, ['yellow']);
-        cmd(asset.command);
-        this.logger.log(`Done building ${asset.name}`, ['green']);
-      }
-    });
+    if (asset.command) {
+      await cmd(asset.command);
+    }
   }
 
-  cleanAsset(asset: Asset) {
+  async cleanAsset(asset: Asset) {
     this.logger.log(`Cleaning ${asset.name}`, ['yellow']);
 
-    if (asset.outfile.exists()) {
+    if (await asset.outfile.exists()) {
       this.logger.log(`Removing ${asset.outfile.path}`);
-      asset.outfile.remove();
+      await asset.outfile.remove();
       this.logger.log(`Done cleaning ${asset.name}`, ['green']);
     } else {
       this.logger.log(`File ${asset.outfile.path} not found`, ['yellow']);
     }
   }
 
-  bump(version: string) {
+  async bump(version: string): Promise<void> {
     this.logger.log(`Bumping version to ${version}`, ['yellow']);
-    cmd(`npm version ${version}`);
+    await cmd(`npm version ${version}`);
     this.logger.log(`Done bumping version to ${version}`, ['green']);
   }
 
-  gitPush() {
+  async gitPush(): Promise<void> {
     this.logger.log('Pushing commit and tag to git', ['yellow']);
-    cmd('git push && git push --tags');
+    await cmd('git push && git push --tags');
     this.logger.log('Done pushing to git', ['green']);
   }
 
-  publish() {
+  async publish(): Promise<void> {
     this.logger.log('Publishing to npm', ['yellow']);
-    cmd('yarn npm publish');
+    await cmd('yarn npm publish');
     this.logger.log('Done publishing to npm', ['green']);
   }
 }
