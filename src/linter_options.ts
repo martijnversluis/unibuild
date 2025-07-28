@@ -1,6 +1,7 @@
-import { CommandGenerator } from './cmd';
 import Asset from './asset';
 import Linter from './linter';
+
+import { CommandGenerator } from './cmd';
 
 interface LinterOptions {
   command: string | string[] | CommandGenerator<Linter>;

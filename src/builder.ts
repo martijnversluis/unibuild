@@ -1,7 +1,7 @@
 import Asset from './asset';
-import Logger from './logger';
 import BuildStages from './build_stages';
 import Config from './config';
+import Logger from './logger';
 import cmd from './cmd';
 
 export interface BuildOptions {
@@ -56,7 +56,7 @@ class Builder {
           if (linter.requires.length > 0) {
             this.logger.section('Building required assets...', () => {
               this.build(
-                linter.requires.map(asset => asset.name),
+                linter.requires.map((asset) => asset.name),
                 { force: false, parallel: false, release: true },
               );
             });
@@ -78,7 +78,7 @@ class Builder {
           if (tester.requires.length > 0) {
             this.logger.section('Building required assets...', () => {
               this.build(
-                tester.requires.map(asset => asset.name),
+                tester.requires.map((asset) => asset.name),
                 { force: false, parallel: false, release: true },
               );
             });
@@ -95,13 +95,11 @@ class Builder {
   filterAssets(assets: Asset[], options: Partial<BuildOptions>): Asset[] {
     if (options.force) return assets;
 
-    return assets.filter((asset) => {
-      return asset.needsBuilding(options);
-    });
+    return assets.filter((asset) => asset.needsBuilding(options));
   }
 
   addDependencies(assets: Asset[]): Asset[] {
-    let allAssets : Set<Asset> = new Set();
+    let allAssets = new Set<Asset>();
 
     assets.forEach((asset) => {
       allAssets.add(asset);
@@ -110,7 +108,7 @@ class Builder {
         if (input.needsRebuild()) {
           allAssets = new Set([
             ...allAssets,
-            ...this.addDependencies([input as Asset])
+            ...this.addDependencies([input as Asset]),
           ]);
         }
       });

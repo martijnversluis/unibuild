@@ -1,8 +1,8 @@
-import { Command } from 'commander';
 import * as packageInfo from '../package.json';
-
 import Builder from './builder';
 import Config from './config';
+
+import { Command } from 'commander';
 
 class CLI {
   builder: Builder;
@@ -21,7 +21,7 @@ class CLI {
     this.program.parse();
   }
 
-  buildProgram(): Command {
+  buildProgram(): Command { // eslint-disable-line max-lines-per-function, max-statements
     const program = new Command();
 
     program

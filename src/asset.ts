@@ -1,7 +1,8 @@
 import AssetFile from './asset_file';
 import AssetInput from './asset_input';
-import BuildFunction from './build_function';
 import AssetOptions from './asset_options';
+import BuildFunction from './build_function';
+
 import { generateCommand } from './cmd';
 
 class Asset {
@@ -48,7 +49,7 @@ class Asset {
     return this.input.some((input) => input instanceof Asset);
   }
 
-  needsBuilding(options: Partial<{ force: boolean,  release: boolean }>) {
+  needsBuilding(options: Partial<{ force: boolean, release: boolean }>) {
     return (!this.releaseOnly || options.release) &&
       (options.force || this.outfileMissing() || this.inputChanged());
   }

@@ -6,7 +6,7 @@ class BuildStages {
 
   constructor(assets: Asset[]) {
     const stages: string[][] = [];
-    const visited: Set<string> = new Set();
+    const visited = new Set<string>();
 
     while (visited.size < assets.length) {
       const group: string[] = [];

@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import Asset from './asset';
 
 export type CommandGenerator<Type> = (input: Type) => string | string[];
 

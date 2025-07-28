@@ -1,5 +1,5 @@
-import DependencyNode from './dependency_node';
 import Asset from './asset';
+import DependencyNode from './dependency_node';
 
 class DependencyGraph {
   roots: Record<string, DependencyNode> = {};
