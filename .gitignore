@@ -1,5 +1,4 @@
 *.js
 .parcel-cache
 .yarn
-lib
 node_modules
