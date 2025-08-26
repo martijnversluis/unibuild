@@ -1,9 +1,9 @@
 import Asset from './asset';
-import AssetOptions from './asset_options';
+import AssetOptions from './types/asset_options';
 import Linter from './linter';
-import LinterOptions from './linter_options';
+import LinterOptions from './types/linter_options';
 import Tester from './tester';
-import TesterOptions from './tester_options';
+import TesterOptions from './types/tester_options';
 
 class Config {
   assets: Record<string, Asset> = {};
@@ -12,8 +12,8 @@ class Config {
 
   testers: Record<string, Tester> = {};
 
-  constructor(callback: (config: Config) => void) {
-    callback(this);
+  constructor(callback?: (config: Config) => void) {
+    if (callback) callback(this);
   }
 
   asset(name: string, options: AssetOptions): Asset {

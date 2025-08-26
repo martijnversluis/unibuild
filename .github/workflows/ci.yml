@@ -27,7 +27,27 @@ jobs:
       - name: Install node modules
         run: yarn install
       - name: Run tests
-        run: yarn lint
+        run: yarn ci
+
+  build-windows:
+    continue-on-error: true
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        node-version: [ 22.x ]
+    name: Windows NodeJS ${{ matrix.node-version }} sample
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install node modules
+        run: yarn install
+      - name: Run tests
+        run: yarn ci
 
   check-trailing-whitespace:
     runs-on: ubuntu-latest

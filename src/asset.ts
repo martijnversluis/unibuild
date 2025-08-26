@@ -1,7 +1,7 @@
 import AssetFile from './asset_file';
-import AssetInput from './asset_input';
-import AssetOptions from './asset_options';
-import BuildFunction from './build_function';
+import AssetInput from './types/asset_input';
+import AssetOptions from './types/asset_options';
+import BuildFunction from './types/build_function';
 
 import { generateCommand } from './cmd';
 
@@ -58,32 +58,12 @@ class Asset {
     return !this.outfileExists() || this.inputChanged() || this.inputNeedsRebuild();
   }
 
-  exists() {
-    return this.outfileExists();
-  }
-
   isFile() {
     return this.outfile.isFile();
   }
 
-  outfileMissing() {
-    return !this.outfileExists();
-  }
-
-  outfileExists() {
-    return this.outfile.exists();
-  }
-
   modifiedTime() {
     return this.outfile.modifiedTime();
-  }
-
-  inputChanged() {
-    return this.input.some((input) => input.newerThan(this));
-  }
-
-  inputNeedsRebuild() {
-    return this.input.some((input) => input.needsRebuild());
   }
 
   newerThan(other: AssetInput) {
@@ -100,6 +80,26 @@ class Asset {
 
   toString() {
     return this.outfile.toString();
+  }
+
+  exists() {
+    return this.outfileExists();
+  }
+
+  private outfileMissing() {
+    return !this.outfileExists();
+  }
+
+  private outfileExists() {
+    return this.outfile.exists();
+  }
+
+  private inputChanged() {
+    return this.input.some((input) => input.newerThan(this));
+  }
+
+  private inputNeedsRebuild() {
+    return this.input.some((input) => input.needsRebuild());
   }
 }
 

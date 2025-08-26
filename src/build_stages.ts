@@ -1,5 +1,5 @@
 import Asset from './asset';
-import AssetInput from './asset_input';
+import AssetInput from './types/asset_input';
 
 class BuildStages {
   grouping: string[][] = [];

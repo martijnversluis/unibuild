@@ -1,4 +1,4 @@
-import BuilderCallback from './builder_callback';
+import BuilderCallback from './types/builder_callback';
 import Config from './config';
 
 export default function configure(callback: BuilderCallback) {

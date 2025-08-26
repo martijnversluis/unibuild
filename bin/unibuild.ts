@@ -19,7 +19,7 @@ function getConfigFilePath(): string {
     }
   }
 
-  throw new Error(`No unibuild config file found (${configFilenames.join(', ')})`);
+  throw new Error(`No unibuild config file found (${configFilenames.join(' or ')})`);
 }
 
 async function findAndLoadConfig(): Promise<Config> {
