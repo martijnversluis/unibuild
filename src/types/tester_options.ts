@@ -1,7 +1,7 @@
-import Asset from './asset';
-import Tester from './tester';
+import Asset from '../asset';
+import Tester from '../tester';
 
-import { CommandGenerator } from './cmd';
+import { CommandGenerator } from '../cmd';
 
 interface TesterOptions {
   command: string | string[] | CommandGenerator<Tester>;

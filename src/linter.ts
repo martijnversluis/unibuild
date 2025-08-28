@@ -1,5 +1,5 @@
 import Asset from './asset';
-import LinterOptions from './linter_options';
+import LinterOptions from './types/linter_options';
 
 import { generateCommand } from './cmd';
 

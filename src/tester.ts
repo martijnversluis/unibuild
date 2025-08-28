@@ -1,5 +1,5 @@
 import Asset from './asset';
-import TesterOptions from './tester_options';
+import TesterOptions from './types/tester_options';
 
 import { generateCommand } from './cmd';
 

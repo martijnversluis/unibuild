@@ -1,8 +1,8 @@
-import Asset from './asset';
+import Asset from '../asset';
 import AssetInput from './asset_input';
 import BuildFunction from './build_function';
 
-import { CommandGenerator } from './cmd';
+import { CommandGenerator } from '../cmd';
 
 interface AssetOptions {
   build?: BuildFunction;

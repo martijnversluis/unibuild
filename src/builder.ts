@@ -1,5 +1,6 @@
 import Asset from './asset';
 import BuildStages from './build_stages';
+import { CommandExecutor } from './types/command_executor';
 import Config from './config';
 import Logger from './logger';
 import cmd from './cmd';
@@ -11,9 +12,11 @@ export interface BuildOptions {
 }
 
 class Builder {
+  commandExecutor: CommandExecutor;
+
   config: Config;
 
-  logger: Logger = new Logger();
+  logger: Logger;
 
   get assets() {
     return this.config.assets;
@@ -27,8 +30,10 @@ class Builder {
     return this.config.testers;
   }
 
-  constructor(config: Config) {
+  constructor(config: Config, commandExecutor?: CommandExecutor, logger?: Logger) {
     this.config = config;
+    this.commandExecutor = commandExecutor || cmd;
+    this.logger = logger || new Logger();
   }
 
   build(assetNames: string[], options: Partial<BuildOptions>): void {
@@ -62,9 +67,9 @@ class Builder {
             });
           }
 
-          const command = fix && linter.autofixCommand ? linter.autofixCommand : linter.command;
+          const command = (fix && linter.autofixCommand) ? linter.autofixCommand : linter.command;
           this.logger.log(`Running linter command: ${command}`, ['yellow']);
-          cmd(command);
+          this.commandExecutor(command);
           this.logger.log(`Done running linter ${linter.name}`, ['green']);
         });
       });
@@ -85,20 +90,44 @@ class Builder {
           }
 
           this.logger.log(`Running test command: ${tester.command}`, ['yellow']);
-          cmd(tester.command);
+          this.commandExecutor(tester.command);
           this.logger.log(`Done running tester ${tester.name}`, ['green']);
         });
       });
     });
   }
 
-  filterAssets(assets: Asset[], options: Partial<BuildOptions>): Asset[] {
+  clean(assetNames: string[]) {
+    this.selectAssets(assetNames).forEach((asset: Asset) => {
+      this.cleanAsset(asset);
+    });
+  }
+
+  bump(version: string) {
+    this.logger.log(`Bumping version to ${version}`, ['yellow']);
+    this.commandExecutor(`npm version ${version}`);
+    this.logger.log(`Done bumping version to ${version}`, ['green']);
+  }
+
+  gitPush() {
+    this.logger.log('Pushing commit and tag to git', ['yellow']);
+    this.commandExecutor('git push && git push --tags');
+    this.logger.log('Done pushing to git', ['green']);
+  }
+
+  publish() {
+    this.logger.log('Publishing to npm', ['yellow']);
+    this.commandExecutor('yarn npm publish');
+    this.logger.log('Done publishing to npm', ['green']);
+  }
+
+  private filterAssets(assets: Asset[], options: Partial<BuildOptions>): Asset[] {
     if (options.force) return assets;
 
     return assets.filter((asset) => asset.needsBuilding(options));
   }
 
-  addDependencies(assets: Asset[]): Asset[] {
+  private addDependencies(assets: Asset[]): Asset[] {
     let allAssets = new Set<Asset>();
 
     assets.forEach((asset) => {
@@ -117,13 +146,7 @@ class Builder {
     return Array.from(allAssets);
   }
 
-  clean(assetNames: string[]) {
-    this.selectAssets(assetNames).forEach((asset: Asset) => {
-      this.cleanAsset(asset);
-    });
-  }
-
-  selectAssets(assetNames: string[], options?: Partial<BuildOptions>) {
+  private selectAssets(assetNames: string[], options?: Partial<BuildOptions>) {
     const buildOptions = { release: true, ...options };
 
     if (assetNames.length === 0) {
@@ -143,7 +166,7 @@ class Builder {
     });
   }
 
-  buildAsset(asset: Asset, options: Partial<BuildOptions>) {
+  private buildAsset(asset: Asset, options: Partial<BuildOptions>) {
     this.logger.log(`Building ${asset.name}`, ['yellow']);
 
     this.logger.indent(() => {
@@ -159,20 +182,20 @@ class Builder {
         }));
 
         const output = asset.buildFunction(options, ...inputs);
-        this.logger.log(`Writing to ${asset.outfile.path}`);
+        this.logger.log(`Writing <${output}> to  ${asset.outfile.path}`);
         asset.outfile.write(output);
         this.logger.log(`Done building ${asset.name}`, ['green']);
       }
 
       if (asset.command) {
         this.logger.log(`Running command: ${asset.command}`, ['yellow']);
-        cmd(asset.command);
+        this.commandExecutor(asset.command);
         this.logger.log(`Done building ${asset.name}`, ['green']);
       }
     });
   }
 
-  cleanAsset(asset: Asset) {
+  private cleanAsset(asset: Asset) {
     this.logger.log(`Cleaning ${asset.name}`, ['yellow']);
 
     if (asset.outfile.exists()) {
@@ -182,24 +205,6 @@ class Builder {
     } else {
       this.logger.log(`File ${asset.outfile.path} not found`, ['yellow']);
     }
-  }
-
-  bump(version: string) {
-    this.logger.log(`Bumping version to ${version}`, ['yellow']);
-    cmd(`npm version ${version}`);
-    this.logger.log(`Done bumping version to ${version}`, ['green']);
-  }
-
-  gitPush() {
-    this.logger.log('Pushing commit and tag to git', ['yellow']);
-    cmd('git push && git push --tags');
-    this.logger.log('Done pushing to git', ['green']);
-  }
-
-  publish() {
-    this.logger.log('Publishing to npm', ['yellow']);
-    cmd('yarn npm publish');
-    this.logger.log('Done publishing to npm', ['green']);
   }
 }
 

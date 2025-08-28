@@ -1,4 +1,4 @@
-import chalk, { ChalkInstance } from 'chalk';
+import chalk, { Chalk } from 'chalk';
 
 class Logger {
   level = 0;
@@ -21,7 +21,7 @@ class Logger {
     console.log(styled);
   }
 
-  styledLogger(styles: string[]): ChalkInstance {
+  styledLogger(styles: string[]): Chalk {
     let writer = chalk.reset;
 
     styles.forEach((style) => {

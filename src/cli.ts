@@ -11,17 +11,19 @@ class CLI {
 
   program: Command;
 
-  constructor(config: Config) {
+  constructor(config: Config, builder?: Builder) {
     this.config = config;
-    this.builder = new Builder(this.config);
+    this.builder = builder || new Builder(this.config);
     this.program = this.buildProgram();
   }
 
-  run() {
-    this.program.parse();
+  run(argv?: readonly string[]) {
+    // console.log('args:', process.execArgv, process.argv);
+
+    this.program.parse(argv);
   }
 
-  buildProgram(): Command { // eslint-disable-line max-lines-per-function, max-statements
+  private buildProgram(): Command { // eslint-disable-line max-lines-per-function, max-statements
     const program = new Command();
 
     program
@@ -79,7 +81,7 @@ class CLI {
     return program;
   }
 
-  build(assetNames: string[], { force, release }: { force?: boolean, release?: boolean }) {
+  private build(assetNames: string[], { force, release }: { force?: boolean, release?: boolean }) {
     this.builder.build(
       assetNames,
       {
@@ -89,40 +91,40 @@ class CLI {
     );
   }
 
-  clean(assetNames: string[]) {
+  private clean(assetNames: string[]) {
     this.builder.clean(assetNames);
   }
 
-  lint({ fix }: { fix?: boolean }) {
+  private lint({ fix }: { fix?: boolean }) {
     this.builder.lint({
       fix: fix || false,
     });
   }
 
-  test() {
+  private test() {
     this.builder.test();
   }
 
-  ci() {
+  private ci() {
     this.build([], { release: false });
     this.lint({ fix: false });
     this.test();
     this.build([], { release: true });
   }
 
-  bump(version: string) {
+  private bump(version: string) {
     this.builder.bump(version);
   }
 
-  publish() {
+  private publish() {
     this.builder.publish();
   }
 
-  gitPush() {
+  private gitPush() {
     this.builder.gitPush();
   }
 
-  release(version: string) {
+  private release(version: string) {
     this.build([], { release: false });
     this.lint({ fix: false });
     this.test();
