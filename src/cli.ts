@@ -62,6 +62,11 @@ class CLI {
       .action(this.ci.bind(this));
 
     program
+      .command('preflight')
+      .description('Run configured pre-release checks')
+      .action(this.preflight.bind(this));
+
+    program
       .command('bump')
       .description('Bump version')
       .argument('<version>', 'Version to bump to')
@@ -112,6 +117,10 @@ class CLI {
     this.build([], { release: true });
   }
 
+  private preflight() {
+    this.builder.preflight();
+  }
+
   private bump(version: string) {
     this.builder.bump(version);
   }
@@ -125,6 +134,7 @@ class CLI {
   }
 
   private release(version: string) {
+    this.preflight();
     this.build([], { release: false });
     this.lint({ fix: false });
     this.test();

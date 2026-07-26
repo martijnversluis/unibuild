@@ -10,6 +10,7 @@ function buildMockBuilder() {
     bump: jest.fn(),
     publish: jest.fn(),
     gitPush: jest.fn(),
+    preflight: jest.fn(),
     release: jest.fn(),
   };
 }
@@ -212,6 +213,19 @@ describe('CLI', () => {
       cli.run(['', 'unibuild', 'publish']);
 
       expect(mockBuilder.publish).toHaveBeenCalled();
+    });
+  });
+
+  describe('preflight', () => {
+    it('calls builder.preflight', () => {
+      const config = new Config(() => {
+      });
+      const mockBuilder = buildMockBuilder();
+      const cli = new CLI(config, mockBuilder as any);
+
+      cli.run(['', 'unibuild', 'preflight']);
+
+      expect(mockBuilder.preflight).toHaveBeenCalled();
     });
   });
 });
