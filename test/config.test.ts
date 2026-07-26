@@ -48,4 +48,36 @@ describe('Config', () => {
       expect(config.testers.jest).toBe(tester);
     });
   });
+
+  describe('#preflight', () => {
+    it('creates and stores a Preflight instance', () => {
+      const config = new Config();
+      const preflight = config.preflight({ gitClean: true });
+
+      expect(preflight).toBeDefined();
+      expect(preflight.gitClean).toBe(true);
+      expect(config.preflightConfig).toBe(preflight);
+    });
+
+    it('defaults all checks to false', () => {
+      const config = new Config();
+      const preflight = config.preflight({});
+
+      expect(preflight.gitClean).toBe(false);
+      expect(preflight.gitInSyncWithBaseBranch).toBe(false);
+      expect(preflight.npmAuth).toBe(false);
+      expect(preflight.hasChecks()).toBe(false);
+    });
+  });
+
+  describe('#preflightConfig', () => {
+    it('is a Preflight with all checks disabled when preflight() is never called', () => {
+      const config = new Config();
+
+      expect(config.preflightConfig.hasChecks()).toBe(false);
+      expect(config.preflightConfig.gitClean).toBe(false);
+      expect(config.preflightConfig.gitInSyncWithBaseBranch).toBe(false);
+      expect(config.preflightConfig.npmAuth).toBe(false);
+    });
+  });
 });

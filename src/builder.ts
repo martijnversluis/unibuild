@@ -30,6 +30,10 @@ class Builder {
     return this.config.testers;
   }
 
+  get preflightConfig() {
+    return this.config.preflightConfig;
+  }
+
   constructor(config: Config, commandExecutor?: CommandExecutor, logger?: Logger) {
     this.config = config;
     this.commandExecutor = commandExecutor || cmd;
@@ -101,6 +105,44 @@ class Builder {
     this.selectAssets(assetNames).forEach((asset: Asset) => {
       this.cleanAsset(asset);
     });
+  }
+
+  preflight() {
+    const preflight = this.preflightConfig;
+
+    if (!preflight.hasChecks()) {
+      this.logger.log('No preflight checks configured, skipping', ['yellow']);
+      return;
+    }
+
+    this.logger.section('Preflight checks...', () => {
+      if (preflight.gitClean) this.checkGitClean();
+      if (preflight.gitInSyncWithBaseBranch) this.checkGitInSyncWithBaseBranch();
+      if (preflight.npmAuth) this.checkNpmAuth();
+    });
+  }
+
+  private checkGitClean() {
+    this.logger.log('Checking git working tree is clean', ['yellow']);
+    this.commandExecutor('test -z "$(git status --porcelain)"');
+    this.logger.log('Working tree is clean', ['green']);
+  }
+
+  private checkGitInSyncWithBaseBranch() {
+    this.logger.log('Checking HEAD is not behind the base branch', ['yellow']);
+    this.commandExecutor(
+      'BASE=$(git rev-parse --abbrev-ref origin/HEAD) && ' +
+      // eslint-disable-next-line no-template-curly-in-string
+      'git fetch --quiet origin "${BASE#origin/}" && ' +
+      'git merge-base --is-ancestor "$BASE" HEAD',
+    );
+    this.logger.log('HEAD is in sync with the base branch', ['green']);
+  }
+
+  private checkNpmAuth() {
+    this.logger.log('Checking npm auth', ['yellow']);
+    this.commandExecutor('yarn npm whoami');
+    this.logger.log('npm auth OK', ['green']);
   }
 
   bump(version: string) {

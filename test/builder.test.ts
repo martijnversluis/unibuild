@@ -503,6 +503,79 @@ describe('Builder', () => {
     });
   });
 
+  describe('#preflight', () => {
+    it('does nothing when no preflight is configured', () => {
+      const config = new Config();
+      const mockCommandExecutor = new MockCommandExecutor();
+
+      const builder = new Builder(
+        config,
+        mockCommandExecutor.execute.bind(mockCommandExecutor),
+        new NullLogger(),
+      );
+
+      builder.preflight();
+
+      expect(mockCommandExecutor.executedCommands).toEqual([]);
+    });
+
+    it('does nothing when no checks are enabled', () => {
+      const config = new Config();
+      config.preflight({});
+      const mockCommandExecutor = new MockCommandExecutor();
+
+      const builder = new Builder(
+        config,
+        mockCommandExecutor.execute.bind(mockCommandExecutor),
+        new NullLogger(),
+      );
+
+      builder.preflight();
+
+      expect(mockCommandExecutor.executedCommands).toEqual([]);
+    });
+
+    it('runs only the enabled checks', () => {
+      const config = new Config();
+      config.preflight({ gitClean: true, npmAuth: true });
+      const mockCommandExecutor = new MockCommandExecutor();
+
+      const builder = new Builder(
+        config,
+        mockCommandExecutor.execute.bind(mockCommandExecutor),
+        new NullLogger(),
+      );
+
+      builder.preflight();
+
+      expect(mockCommandExecutor.executedCommands).toEqual([
+        'test -z "$(git status --porcelain)"',
+        'yarn npm whoami',
+      ]);
+    });
+
+    it('detects the base branch via origin/HEAD, fetches it and checks ancestry', () => {
+      const config = new Config();
+      config.preflight({ gitInSyncWithBaseBranch: true });
+      const mockCommandExecutor = new MockCommandExecutor();
+
+      const builder = new Builder(
+        config,
+        mockCommandExecutor.execute.bind(mockCommandExecutor),
+        new NullLogger(),
+      );
+
+      builder.preflight();
+
+      expect(mockCommandExecutor.executedCommands).toEqual([
+        'BASE=$(git rev-parse --abbrev-ref origin/HEAD) && ' +
+        // eslint-disable-next-line no-template-curly-in-string
+        'git fetch --quiet origin "${BASE#origin/}" && ' +
+        'git merge-base --is-ancestor "$BASE" HEAD',
+      ]);
+    });
+  });
+
   describe('#bump', () => {
     it('bumps the version in package.json', () => {
       const config = new Config();

@@ -2,6 +2,8 @@ import Asset from './asset';
 import AssetOptions from './types/asset_options';
 import Linter from './linter';
 import LinterOptions from './types/linter_options';
+import Preflight from './preflight';
+import PreflightOptions from './types/preflight_options';
 import Tester from './tester';
 import TesterOptions from './types/tester_options';
 
@@ -11,6 +13,8 @@ class Config {
   linters: Record<string, Linter> = {};
 
   testers: Record<string, Tester> = {};
+
+  preflightConfig: Preflight = new Preflight();
 
   constructor(callback?: (config: Config) => void) {
     if (callback) callback(this);
@@ -32,6 +36,11 @@ class Config {
     const tester = new Tester(name, options);
     this.testers[name] = tester;
     return tester;
+  }
+
+  preflight(options: PreflightOptions): Preflight {
+    this.preflightConfig = new Preflight(options);
+    return this.preflightConfig;
   }
 }
 
