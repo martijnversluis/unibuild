@@ -51,9 +51,11 @@
     "ts-node": "^10.9.2"
   },
   "scripts": {
-    "ci": "yarn lint && yarn test",
-    "lint": "node_modules/.bin/eslint",
-    "lint:fix": "node_modules/.bin/eslint --fix",
-    "test": "jest"
+    "ci": "yarn unibuild ci",
+    "lint": "yarn unibuild lint",
+    "lint:fix": "yarn unibuild lint --fix",
+    "test": "yarn unibuild test",
+    "preflight": "yarn unibuild preflight",
+    "release": "yarn unibuild release"
   }
 }
